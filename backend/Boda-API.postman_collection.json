@@ -1,0 +1,46 @@
+{
+  "info": {
+    "_postman_id": "boda-api-collection-001",
+    "name": "Boda API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Listar Invitados",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8000/api/guests",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8000",
+          "path": ["api", "guests"]
+        }
+      }
+    },
+    {
+      "name": "Crear Invitado",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Juan\",\n  \"apellido\": \"Pérez\",\n  \"email\": \"juan@example.com\",\n  \"confirmado\": true,\n  \"mesa_id\": 1\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8000/api/guests",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8000",
+          "path": ["api", "guests"]
+        }
+      }
+    }
+  ]
+}
