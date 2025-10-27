@@ -1,63 +1,40 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Guest;
-use Illuminate\Validation\Rule;
 use Illuminate\Http\Request;
 
 class GuestController extends Controller
 {
-    // Devuelve todos los invitados
     public function index()
     {
-        return Guest::all();
+        // Obtener todos los invitados con el campo 'familiaridad'
+        $guests = Guest::all();
+
+        return response()->json($guests);
     }
 
-    // Crear un nuevo invitado
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'nombre' => 'required|string|max:255',
-            'apellido' => 'required|string|max:255',
-            'email' => 'required|email|unique:guests,email',
-            'confirmado' => 'boolean',
-            'mesa_id' => 'nullable|exists:mesas,id',
-        ]);
-        $guest = Guest::create($validated);
-        return response()->json($guest, 201);
-    }
-
-    // Devuelve un invitado específico
-    public function show(Guest $guest)
-    {
-        return $guest;
-    }
-
-    // Actualizar un invitado existente
     public function update(Request $request, Guest $guest)
     {
-        $validated = $request->validate([
-            'nombre' => 'sometimes|required|string|max:255',
-            'apellido' => 'sometimes|required|string|max:255',
-            'email' => [
-                'sometimes',
-                'required',
-                'email',
-                Rule::unique('guests')->ignore($guest->id),
-            ],
-            'confirmado' => 'sometimes|boolean',
-            'mesa_id' => 'nullable|exists:mesas,id',
+        // Validar los datos de entrada
+        $validatedData = $request->validate([
+            'mesa_id' => 'nullable|integer|exists:mesas,id',
+            'seat_position' => 'nullable|integer',
         ]);
 
-        $guest->update($validated);
+        // Actualizar el invitado
+        // El método fill es más seguro que asignar directamente
+        $guest->fill($validatedData);
 
+        // Si mesa_id es null, también seat_position debe ser null
+        if (array_key_exists('mesa_id', $validatedData) && is_null($validatedData['mesa_id'])) {
+            $guest->seat_position = null;
+        }
+
+        $guest->save();
+
+        // Devolver el invitado actualizado
         return response()->json($guest);
-    }
-
-    // Eliminar un invitado
-    public function destroy(Guest $guest)
-    {
-        $guest->delete();
-        return response()->json(null, 204);
     }
 }

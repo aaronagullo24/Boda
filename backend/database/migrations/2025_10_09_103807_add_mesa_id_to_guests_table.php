@@ -12,8 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('guests', function (Blueprint $table) {
-            $table->unsignedBigInteger('mesa_id')->nullable()->after('id');
-            $table->foreign('mesa_id')->references('id')->on('mesas')->onDelete('set null');
+            // Agregar columna mesa_id con clave foránea a mesas
+            if (!Schema::hasColumn('guests', 'mesa_id')) {
+                $table->foreignId('mesa_id')->nullable()->constrained('mesas')->nullOnDelete()->after('confirmado');
+            }
         });
     }
 
@@ -23,8 +25,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('guests', function (Blueprint $table) {
-            $table->dropForeign(['mesa_id']);
-            $table->dropColumn('mesa_id');
+            if (Schema::hasColumn('guests', 'mesa_id')) {
+                $table->dropConstrainedForeignId('mesa_id');
+            }
         });
     }
 };

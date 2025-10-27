@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\GuestController;
+use App\Http\Controllers\MesaController;
 
-Route::get('/guests', [GuestController::class, 'index'])->name('guests.index');
-Route::post('/guests', [GuestController::class, 'store'])->name('guests.store');
+Route::get('/guests', [GuestController::class, 'index']);
+Route::apiResource('mesas', MesaController::class);

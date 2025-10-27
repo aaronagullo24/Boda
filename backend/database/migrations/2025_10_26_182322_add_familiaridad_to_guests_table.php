@@ -11,11 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('mesas', function (Blueprint $table) {
-            $table->id();
-            $table->string('nombre');
-            $table->integer('capacidad');
-            $table->timestamps();
+        Schema::table('guests', function (Blueprint $table) {
+            $table->string('familiaridad')->nullable(); // Agregar la columna 'familiaridad'
         });
     }
 
@@ -24,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('mesas');
+        Schema::table('guests', function (Blueprint $table) {
+            $table->dropColumn('familiaridad'); // Eliminar la columna 'familiaridad' en caso de rollback
+        });
     }
 };
