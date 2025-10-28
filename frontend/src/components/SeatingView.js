@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { DndProvider } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
 import Table from './Table';
 import Guest from './Guest';
 
@@ -25,19 +23,19 @@ const SeatingView = () => {
       const mesasData = await mesasRes.json();
       const invitadosData = await invitadosRes.json();
 
-      // Asignar invitados a sus mesas
-      const mesasConInvitados = mesasData.map(mesa => {
-        const invitadosEnMesa = invitadosData.filter(inv => inv.mesa_id === mesa.id);
+      const mesasConAsientos = mesasData.map(mesa => {
         const asientos = Array(mesa.capacidad).fill(null);
-        invitadosEnMesa.forEach(inv => {
-          if (inv.seat_position !== null && inv.seat_position < mesa.capacidad) {
-            asientos[inv.seat_position] = inv;
-          }
-        });
+        if (mesa.guests) {
+          mesa.guests.forEach(invitado => {
+            if (invitado.seat_position !== null && invitado.seat_position < mesa.capacidad) {
+              asientos[invitado.seat_position] = invitado;
+            }
+          });
+        }
         return { ...mesa, asientos };
       });
 
-      setMesas(mesasConInvitados);
+      setMesas(mesasConAsientos);
       setInvitados(invitadosData);
       setError(null);
     } catch (error) {
@@ -52,69 +50,60 @@ const SeatingView = () => {
     fetchData();
   }, [fetchData]);
 
-  const handleDropGuest = useCallback(async (guestId, newMesaId, seatPosition) => {    
-    // Usamos una función en setMesas y setInvitados para garantizar que trabajamos con el estado más reciente
-    // y evitar problemas de "stale state" por dependencias en useCallback.
-    
-    // Guardamos el estado original para poder revertir en caso de error en la API
+  const handleDropGuest = useCallback(async (guestId, newMesaId, seatPosition) => {
+    const guestToMove = invitados.find(inv => inv.id === guestId);
+    if (!guestToMove) return;
+
     const originalMesas = JSON.parse(JSON.stringify(mesas));
     const originalInvitados = JSON.parse(JSON.stringify(invitados));
 
-    // Actualización optimista de la UI
+    // Optimistic UI Update
     setMesas(prevMesas => {
-      const newMesas = JSON.parse(JSON.stringify(prevMesas));
-      const invitado = originalInvitados.find(inv => inv.id === guestId);
-      if (!invitado) return prevMesas; // No hacer nada si el invitado no se encuentra
-
-      // 1. Quitar al invitado de su asiento anterior (si lo tenía)
-      const oldMesaId = invitado.mesa_id;
-      if (oldMesaId !== null) {
-        const oldMesa = newMesas.find(m => m.id === oldMesaId);
-        if (oldMesa) {
-          const oldSeatIndex = oldMesa.asientos.findIndex(s => s && s.id === guestId);
-          if (oldSeatIndex > -1) {
-            oldMesa.asientos[oldSeatIndex] = null;
-          }
+        const newMesas = JSON.parse(JSON.stringify(prevMesas));
+        if (guestToMove.mesa_id !== null) {
+            const oldMesa = newMesas.find(m => m.id === guestToMove.mesa_id);
+            if (oldMesa) {
+                const oldSeatIndex = oldMesa.asientos.findIndex(s => s && s.id === guestId);
+                if (oldSeatIndex > -1) {
+                    oldMesa.asientos[oldSeatIndex] = null;
+                }
+            }
         }
-      }
-
-      // 2. Añadir al invitado a su nuevo asiento
-      const newMesa = newMesas.find(m => m.id === newMesaId);
-      const updatedGuest = { ...invitado, mesa_id: newMesaId, seat_position: seatPosition };
-      if (newMesa) {
-        newMesa.asientos[seatPosition] = updatedGuest;
-      }
-      return newMesas;
+        if (newMesaId !== null) {
+            const newMesa = newMesas.find(m => m.id === newMesaId);
+            if (newMesa) {
+                newMesa.asientos[seatPosition] = { ...guestToMove, mesa_id: newMesaId, seat_position: seatPosition };
+            }
+        }
+        return newMesas;
     });
 
-    setInvitados(prevInvitados => prevInvitados.map(inv =>
-        inv.id === guestId ? { ...inv, mesa_id: newMesaId, seat_position: seatPosition } : inv
-    ));
+    setInvitados(prevInvitados =>
+        prevInvitados.map(inv =>
+            inv.id === guestId ? { ...inv, mesa_id: newMesaId, seat_position: seatPosition } : inv
+        )
+    );
 
-    // Petición a la API
+    // API Call
     try {
-      const response = await fetch(`http://localhost:8000/api/guests/${guestId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify({
-          mesa_id: newMesaId,
-          seat_position: seatPosition,
-        }),
-      });
-
-      if (!response.ok) throw new Error('Error al actualizar el invitado');
-
-    } catch (error) { 
-      console.error("Error al mover el invitado:", error);
-      // Si falla, revertimos al estado original
-      setMesas(originalMesas);
-      setInvitados(originalInvitados);
-      setError('No se pudo mover al invitado.');
+        const response = await fetch(`http://localhost:8000/api/guests/${guestId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({ mesa_id: newMesaId, seat_position: seatPosition }),
+        });
+        if (!response.ok) throw new Error('Error al actualizar el invitado');
+    } catch (error) {
+        console.error("Error al mover el invitado:", error);
+        setMesas(originalMesas);
+        setInvitados(originalInvitados);
+        setError('No se pudo mover al invitado.');
     }
-  }, [mesas, invitados]); // Eliminamos fetchData de las dependencias
+  }, [invitados, mesas]);
+
+  const handleUnassignGuest = (guest) => {
+    if (!guest) return;
+    handleDropGuest(guest.id, null, null);
+  };
 
   const invitadosSinMesa = invitados.filter(inv => inv.mesa_id === null);
 
@@ -122,24 +111,20 @@ const SeatingView = () => {
   if (error) return <div className="text-center text-red-500 p-8">{error}</div>;
 
   return (
-    <DndProvider backend={HTML5Backend}>
-      <div className="flex h-[calc(100vh-64px)] bg-cream">
-        {/* Lista de Invitados */}
-        <div className="w-1/4 bg-ivory p-4 overflow-y-auto shadow-lg">
-          <h2 className="font-bold text-2xl text-charcoal mb-4 sticky top-0 bg-ivory pb-2">Invitados sin mesa</h2>
-          <div className="space-y-2">
-            {invitadosSinMesa.map(invitado => <Guest key={invitado.id} invitado={invitado} />)}
-          </div>
-        </div>
-
-        {/* Área de Mesas */}
-        <div className="w-3/4 p-8 overflow-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {mesas.map(mesa => (
-            <Table key={mesa.id} mesa={mesa} onDropGuest={handleDropGuest} />
-          ))}
+    <div className="flex h-[calc(100vh-64px)] bg-cream">
+      <div className="w-1/4 bg-ivory p-4 overflow-y-auto shadow-lg">
+        <h2 className="font-bold text-2xl text-charcoal mb-4 sticky top-0 bg-ivory pb-2">Invitados sin mesa</h2>
+        <div className="space-y-2">
+          {invitadosSinMesa.map(invitado => <Guest key={invitado.id} invitado={invitado} />)}
         </div>
       </div>
-    </DndProvider>
+
+      <div className="w-3/4 p-8 overflow-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {mesas.map(mesa => (
+          <Table key={mesa.id} mesa={mesa} onDropGuest={handleDropGuest} onUnassignGuest={handleUnassignGuest} />
+        ))}
+      </div>
+    </div>
   );
 };
 

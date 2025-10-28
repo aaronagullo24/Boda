@@ -4,7 +4,7 @@ import { useDrag } from 'react-dnd';
 const Guest = ({ invitado, isSeated = false }) => {
   const [{ isDragging }, drag] = useDrag(() => ({
     type: 'guest',
-    item: { id: invitado.id },
+    item: invitado,
     collect: (monitor) => ({
       isDragging: !!monitor.isDragging(),
     }),

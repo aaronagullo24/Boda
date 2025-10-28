@@ -1,7 +1,7 @@
 import React from 'react';
 import Seat from './Seat';
 
-const Table = ({ mesa, onDropGuest }) => {
+const Table = ({ mesa, onDropGuest, onUnassignGuest }) => {
   const tableStyle = {
     width: '250px',
     height: '250px',
@@ -27,7 +27,7 @@ const Table = ({ mesa, onDropGuest }) => {
           <p className="font-bold text-lg">{mesa.asientos.filter(Boolean).length} / {mesa.capacidad}</p>
         </div>
         {mesa.asientos.map((invitado, index) => (
-          <Seat key={index} seatInfo={{ mesaId: mesa.id, position: index, invitado }} onDropGuest={onDropGuest} style={getSeatPosition(index, mesa.capacidad)} />
+          <Seat key={index} seatInfo={{ mesaId: mesa.id, position: index, invitado }} onDropGuest={onDropGuest} onUnassignGuest={onUnassignGuest} style={getSeatPosition(index, mesa.capacidad)} />
         ))}
       </div>
     </div>

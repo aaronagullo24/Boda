@@ -1,6 +1,6 @@
 import React from 'react';
 
-const GuestCard = ({ guest }) => {
+const GuestCard = ({ guest, onDelete }) => {
   const getRibbonStyle = (familiaridad) => {
     switch (familiaridad) {
       case 'FAMILIA NOVIA':
@@ -19,7 +19,14 @@ const GuestCard = ({ guest }) => {
   }
 
   return (
-    <div className="relative bg-ivory rounded-lg shadow-xl p-6 m-4 w-64 border-2 border-transparent hover:border-rose-gold transition-all duration-300">
+    <div className="relative bg-ivory rounded-lg shadow-xl p-6 m-4 w-64 border-2 border-transparent transition-all duration-300">
+      <button
+        onClick={() => onDelete && onDelete(guest)}
+        title="Eliminar invitado"
+        className="absolute -top-2 -right-2 w-7 h-7 rounded-full border border-rose-200 text-rose-400 bg-white/90 shadow-sm flex items-center justify-center hover:bg-rose-50 hover:text-rose-500 transition"
+      >
+        <span className="text-base leading-none">×</span>
+      </button>
       {/* Distintivo */}
       <div
         className={`absolute top-0 left-0 w-6 h-6 ${getRibbonStyle(guest.familiaridad)} rounded-full`}
@@ -28,7 +35,7 @@ const GuestCard = ({ guest }) => {
 
       <h2 className="text-2xl font-bold mb-2 text-charcoal">{guest.nombre} {guest.apellido}</h2>
       <p className="text-charcoal/70">Familiaridad: {guest.familiaridad || 'No especificada'}</p>
-      <p className="text-charcoal/70">Mesa: {guest.mesa_id || 'No asignada'}</p>
+      <p className="text-charcoal/70">Mesa: {guest.mesa ? guest.mesa.nombre : 'No asignada'}</p>
       <p className={`text-sm mt-4 font-semibold ${guest.confirmed ? 'text-green-600' : 'text-red-600'}`}>
         {guest.confirmed ? 'Confirmado' : 'Pendiente'}
       </p>

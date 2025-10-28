@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Guest extends Model
 {
     protected $fillable = [
-        'nombre', 'apellido', 'email', 'confirmado', 'mesa_id', 'familiaridad'
+        'nombre', 'apellido', 'email', 'confirmado', 'mesa_id', 'familiaridad', 'seat_position'
     ];
 
     public function mesa()
