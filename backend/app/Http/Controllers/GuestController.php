@@ -36,31 +36,34 @@ class GuestController extends Controller
         return response()->json($guest->fresh(), 201);
     }
 
-    public function update(Request $request, Guest $guest)
+    public function update(Request $request, Guest $guest) // Laravel inyecta el modelo Guest directamente
     {
-        $validatedData = $request->validate([
-            'mesa_id' => 'nullable|integer|exists:mesas,id',
-            'seat_position' => 'nullable|integer',
-        ]);
-
-        // Asignar mesa_id si está presente en la solicitud
-        if (array_key_exists('mesa_id', $validatedData)) {
-            $guest->mesa_id = $validatedData['mesa_id'];
+        // Validar dinámicamente según los campos que lleguen en la petición
+        $rules = [];
+        if ($request->has('mesa_id') || $request->has('seat_position')) {
+            $rules['mesa_id'] = 'nullable|integer|exists:mesas,id'; // Permite asignar a null
+            $rules['seat_position'] = 'nullable|integer';
+        }
+        if ($request->has('confirmado')) {
+            $rules['confirmado'] = 'required|boolean';
+        }
+        if ($request->has('nombre')) {
+            $rules['nombre'] = 'required|string|max:255';
+        }
+        if ($request->has('apellido')) {
+            $rules['apellido'] = 'nullable|string|max:255';
+        }
+        if ($request->has('familiaridad')) {
+            $rules['familiaridad'] = 'required|string|max:255';
         }
 
-        // Si se asigna una mesa, se puede asignar un asiento.
-        // Si no se asigna mesa (mesa_id es null), el asiento también debe ser null.
-        if ($guest->mesa_id !== null) {
-            if (array_key_exists('seat_position', $validatedData)) {
-                $guest->seat_position = $validatedData['seat_position'];
-            }
-        } else {
-            $guest->seat_position = null;
-        }
+        $validatedData = $request->validate($rules);
+
+        $guest->update($validatedData);
 
         $guest->save();
 
-        return response()->json($guest);
+        return response()->json($guest->load('mesa'));
     }
 
     public function destroy(Guest $guest)

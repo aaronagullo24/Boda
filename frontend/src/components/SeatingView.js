@@ -7,6 +7,7 @@ const SeatingView = () => {
   const [invitados, setInvitados] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const fetchData = useCallback(async () => {
     try {
@@ -105,16 +106,28 @@ const SeatingView = () => {
     handleDropGuest(guest.id, null, null);
   };
 
-  const invitadosSinMesa = invitados.filter(inv => inv.mesa_id === null);
+  const invitadosSinMesa = invitados.filter(inv => 
+    inv.mesa_id === null &&
+    (inv.nombre.toLowerCase() + ' ' + (inv.apellido || '').toLowerCase()).includes(searchTerm.toLowerCase())
+  );
 
   if (loading) return <div className="text-center p-8">Cargando distribución...</div>;
   if (error) return <div className="text-center text-red-500 p-8">{error}</div>;
 
   return (
     <div className="flex h-[calc(100vh-64px)] bg-cream">
-      <div className="w-1/4 bg-ivory p-4 overflow-y-auto shadow-lg">
-        <h2 className="font-bold text-2xl text-charcoal mb-4 sticky top-0 bg-ivory pb-2">Invitados sin mesa</h2>
-        <div className="space-y-2">
+      <div className="w-1/4 bg-ivory flex flex-col p-4 shadow-lg">
+        <div className="sticky top-0 bg-ivory z-10 pt-2 pb-4">
+          <h2 className="font-bold text-2xl text-charcoal mb-4">Invitados sin mesa</h2>
+          <input
+            type="text"
+            placeholder="Buscar invitado..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-gold"
+          />
+        </div>
+        <div className="space-y-2 overflow-y-auto">
           {invitadosSinMesa.map(invitado => <Guest key={invitado.id} invitado={invitado} />)}
         </div>
       </div>
