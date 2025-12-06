@@ -59,6 +59,14 @@ class GuestController extends Controller
 
         $validatedData = $request->validate($rules);
 
+        // Validación de capacidad de la mesa
+        if (isset($validatedData['mesa_id']) && $validatedData['mesa_id'] !== null && $validatedData['mesa_id'] != $guest->mesa_id) {
+            $mesa = \App\Models\Mesa::findOrFail($validatedData['mesa_id']);
+            if ($mesa->guests()->count() >= $mesa->capacidad) {
+                return response()->json(['message' => 'La mesa está llena.'], 422);
+            }
+        }
+
         $guest->update($validatedData);
 
         $guest->save();

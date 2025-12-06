@@ -18,7 +18,7 @@ const GuestList = () => {
   const [submitError, setSubmitError] = useState('');
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editingGuest, setEditingGuest] = useState(null);
+  // editingGuest removed as it was unused
   const [editForm, setEditForm] = useState({ id: null, nombre: '', apellido: '', familiaridad: '' });
 
   useEffect(() => {
@@ -76,12 +76,11 @@ const GuestList = () => {
 
   const openEditModal = (guest) => {
     setSubmitError('');
-    setEditingGuest(guest);
-    setEditForm({ 
-      id: guest.id, 
-      nombre: guest.nombre, 
-      apellido: guest.apellido, 
-      familiaridad: guest.familiaridad 
+    setEditForm({
+      id: guest.id,
+      nombre: guest.nombre,
+      apellido: guest.apellido,
+      familiaridad: guest.familiaridad
     });
     setIsEditModalOpen(true);
   };
@@ -173,7 +172,7 @@ const GuestList = () => {
   return (
     <div className="p-8">
       <h1 className="font-script text-7xl text-center mb-8 text-rose-gold">Lista de Invitados</h1>
-      
+
       <div className="max-w-4xl mx-auto bg-white/50 rounded-xl p-4 mb-8 shadow-sm">
         <div className="grid grid-cols-1 gap-4">
           <input
@@ -183,7 +182,7 @@ const GuestList = () => {
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
           />
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <select onChange={e => setFilterTable(e.target.value)} value={filterTable} className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-gold">
               <option value="">Todas las mesas</option>
@@ -257,10 +256,10 @@ const GuestList = () => {
           };
 
           return (
-            <GuestCard 
-              key={guest.id} 
-              guest={guest} 
-              onToggleConfirm={handleToggleConfirm} 
+            <GuestCard
+              key={guest.id}
+              guest={guest}
+              onToggleConfirm={handleToggleConfirm}
               onDelete={handleDelete}
               onEdit={openEditModal}
             />

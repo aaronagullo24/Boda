@@ -25,6 +25,11 @@ const Navbar = () => {
             Distribución de Mesas
           </NavLink>
         </li>
+        <li>
+          <NavLink to="/cronograma" style={({ isActive }) => isActive ? activeStyle : undefined}>
+            Cronograma
+          </NavLink>
+        </li>
       </ul>
     </nav>
   );

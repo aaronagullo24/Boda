@@ -1,3 +1,29 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Clase global para títulos */
+.title {
+  @apply text-3xl font-script text-center flex-grow;
+}
+
+/* Glassmorphism Utilities */
+.glass {
+  @apply bg-white/30 backdrop-blur-md border border-white/20 shadow-lg;
+}
+
+.glass-card {
+  @apply bg-white/70 backdrop-blur-md shadow-xl border border-white/50 rounded-2xl;
+}
+
+.btn-primary {
+  @apply bg-rose-gold text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-rose-gold-dark transition-all transform hover:scale-105;
+}
+
+.btn-secondary {
+  @apply bg-champagne text-charcoal font-bold py-2 px-4 rounded-lg shadow-md hover:opacity-90 transition-all;
+}
+
+.input-field {
+  @apply w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-gold bg-white/80;
+}
