@@ -2,15 +2,16 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Table from './Table';
 import Guest from './Guest';
 import Draggable from 'react-draggable';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
-// Subcomponent wrapper to handle nodeRef for Draggable
+// Subcomponente envoltorio para manejar la referencia del nodo para Draggable
 const DraggableTableWrapper = ({ mesa, isLayoutMode, onStop, children }) => {
   const nodeRef = React.useRef(null);
 
-  // Default grid position fallback if no coordinates
-  // We handle this calculation inside or pass it down, but here we just need the values.
-  // The parent already calculated x/y or passed them.
-  // Let's assume mesa.x/y are prepared by parent.
+  // Fallback de posición por defecto si no hay coordenadas
+  // Se calcula dentro o se pasa, pero aquí solo necesitamos los valores.
+  // Asumimos que mesa.x/y ya vienen preparados por el padre.
 
   return (
     <Draggable
@@ -80,7 +81,7 @@ const SeatingView = () => {
   }, [fetchData]);
 
   const handleDropGuest = useCallback(async (guestId, newMesaId, seatPosition) => {
-    if (isLayoutMode) return; // Disable guest drop in layout mode
+    if (isLayoutMode) return; // Deshabilitar soltar invitados en modo diseño
     const guestToMove = invitados.find(inv => inv.id === guestId);
     if (!guestToMove) return;
 
@@ -136,7 +137,7 @@ const SeatingView = () => {
 
   const handleTableStop = async (e, data, mesaId) => {
     const { x, y } = data;
-    // Optimistic update
+    // Actualización optimista
     setMesas(prevMesas => prevMesas.map(m =>
       m.id === mesaId ? { ...m, position_x: x, position_y: y } : m
     ));
@@ -149,8 +150,34 @@ const SeatingView = () => {
       });
     } catch (error) {
       console.error("Error al mover mesa:", error);
-      // Revert or show error
+      // Revertir o mostrar error
     }
+  };
+
+  // Función para exportar a PDF
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(20);
+    doc.text("Distribución de Mesas - Sheri y Aarón", 14, 22);
+    doc.setFontSize(12);
+
+    const tablesData = mesas.map(mesa => {
+      const invitadosNombres = mesa.asientos
+        .filter(a => a !== null)
+        .map(a => `${a.nombre} ${a.apellido}`)
+        .join(', ');
+      return [mesa.nombre, mesa.capacidad, invitadosNombres || '(Vacía)'];
+    });
+
+    autoTable(doc, {
+      startY: 30,
+      head: [['Nombre Mesa', 'Cap.', 'Invitados']],
+      body: tablesData,
+      styles: { font: 'helvetica', fontSize: 10 },
+      headStyles: { fillColor: [183, 110, 121] }, // Rose Gold aprox
+    });
+
+    doc.save('distribucion_mesas.pdf');
   };
 
   const invitadosSinMesa = invitados.filter(inv =>
@@ -199,33 +226,43 @@ const SeatingView = () => {
                 👥
               </button>
             )}
-            <h2 className="text-2xl font-script text-rose-gold">Distribución de Salón</h2>
+            <h2 className="text-2xl font-script text-rose-gold">Distribución Salón</h2>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleExportPDF}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-sage text-white font-bold shadow-md hover:scale-105 transition-all mr-2"
+              title="Exportar listado a PDF"
+            >
+              📄 <span className="hidden sm:inline">PDF</span>
+            </button>
             <button
               onClick={() => setIsGuestPanelOpen(!isGuestPanelOpen)}
-              className="hidden md:block text-sm text-charcoal/60 hover:text-rose-gold underline"
+              className="hidden md:block text-sm text-charcoal/60 hover:text-rose-gold underline ml-2"
             >
-              {isGuestPanelOpen ? 'Ocultar Invitados' : 'Mostrar Invitados'}
+              {isGuestPanelOpen ? 'Ocultar Lista' : 'Ver Lista'}
             </button>
-            <span className="hidden md:inline text-sm text-charcoal/60">
-              {isLayoutMode ? "Arrastra las mesas" : "Asigna invitados"}
-            </span>
-            <button
-              onClick={() => setIsLayoutMode(!isLayoutMode)}
-              className={`px-4 py-2 rounded-lg font-bold shadow-md transition-all ${isLayoutMode ? 'bg-rose-gold text-white scale-105' : 'bg-white text-charcoal border border-gray-300 hover:bg-gray-50'}`}
-            >
-              {isLayoutMode ? 'Terminar Diseño' : 'Modo Diseño'}
-            </button>
+
+            <div className="ml-4 flex items-center gap-2">
+              <span className="hidden md:inline text-sm text-charcoal/60 text-right w-24 leading-snug">
+                {isLayoutMode ? "Mover mesas" : "Asignar"}
+              </span>
+              <button
+                onClick={() => setIsLayoutMode(!isLayoutMode)}
+                className={`px-4 py-2 rounded-lg font-bold shadow-md transition-all ${isLayoutMode ? 'bg-rose-gold text-white scale-105' : 'bg-white text-charcoal border border-gray-300 hover:bg-gray-50'}`}
+              >
+                {isLayoutMode ? 'Terminar' : 'Modo Diseño'}
+              </button>
+            </div>
           </div>
         </div>
 
         <div className="flex-grow overflow-auto relative bg-ivory">
-          {/* Abstract Canvas Size */}
+          {/* Tamaño abstracto del lienzo para permitir scroll amplio */}
           <div className="bg-grid-pattern relative p-8" style={{ minWidth: '2000px', minHeight: '2000px' }}>
             {mesas.map((mesa, index) => {
-              // Default grid position fallback if no coordinates
+              // Fallback de posición grid si no hay coordenadas
               const defaultX = (index % 3) * 350 + 50;
               const defaultY = Math.floor(index / 3) * 350 + 50;
               const mesaWithPos = {
@@ -246,7 +283,7 @@ const SeatingView = () => {
                   </div>
                   {isLayoutMode && (
                     <div className="absolute -top-6 left-0 w-full text-center bg-rose-gold text-white text-xs py-1 rounded shadow">
-                      Mover Mesa
+                      Mover
                     </div>
                   )}
                 </DraggableTableWrapper>

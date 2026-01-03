@@ -4,6 +4,7 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import GuestList from './components/GuestList';
 import TablesView from './components/TablesView';
+import DashboardView from './components/DashboardView';
 import SeatingView from './components/SeatingView';
 import CronogramaView from './components/CronogramaView';
 import GastosView from './components/GastosView';
@@ -56,7 +57,7 @@ function App() {
     <BrowserRouter>
       <div className="bg-rose-water min-h-screen font-sans text-charcoal">
         <Sidebar isOpen={isSidebarOpen} onClose={toggleSidebar} />
-        
+
         <header className="bg-ivory text-charcoal p-4 shadow-md sticky top-0 z-50 flex items-center justify-between">
           <div className="flex-1">
             <button className="menu-btn text-charcoal text-2xl" onClick={toggleSidebar}>&#9776;</button>
@@ -72,6 +73,7 @@ function App() {
 
         <main>
           <Routes>
+            <Route path="/dashboard" element={<DashboardView />} />
             <Route path="/guests" element={<GuestList />} />
             <Route path="/tables" element={<TablesView />} />
             <Route path="/seating" element={
@@ -81,7 +83,7 @@ function App() {
             } />
             <Route path="/cronograma" element={<CronogramaView />} />
             <Route path="/gastos" element={<GastosView />} />
-            <Route path="/" element={<Navigate replace to="/tables" />} />
+            <Route path="/" element={<Navigate replace to="/dashboard" />} />
           </Routes>
         </main>
       </div>
